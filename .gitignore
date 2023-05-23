@@ -1,0 +1,10 @@
+# I usually put test ROMs here (either real games or blargg's tests)
+bin/
+
+.cache/
+.idea/
+.vs/
+cmake_*/
+out/
+compile_commands.json
+

@@ -1,0 +1,6 @@
+[submodule "external/arena_allocator"]
+	path = external/arena_allocator
+	url = https://github.com/Torphedo/arena_allocator
+[submodule "external/logging"]
+	path = external/logging
+	url = https://github.com/Torphedo/logging
