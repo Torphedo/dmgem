@@ -337,6 +337,7 @@ typedef enum {
     SRA_HL  = 0x2E,
     SRA_A   = 0x2F,
            
+    // Swap the first and second 4 bits in an 8-bit value/register
     SWAP_B  = 0x30,
     SWAP_C  = 0x31,
     SWAP_D  = 0x32,

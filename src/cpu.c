@@ -77,8 +77,61 @@ static bool execute_prefix(cpu_state* cpu, const machine_state* machine) {
         case RR_L:
             cpu->L = sm83_rotate_register(cpu->L, cpu);
             break;
+        case SWAP_B:
+            cpu->B = sm83_swap(cpu->B, cpu);
+            break;
+        case SWAP_C:
+            cpu->C = sm83_swap(cpu->C, cpu);
+            break;
+        case SWAP_D:
+            cpu->D = sm83_swap(cpu->D, cpu);
+            break;
+        case SWAP_E:
+            cpu->E = sm83_swap(cpu->E, cpu);
+            break;
+        case SWAP_H:
+            cpu->H = sm83_swap(cpu->H, cpu);
+            break;
+        case SWAP_L:
+            cpu->L = sm83_swap(cpu->L, cpu);
+            break;
+        case SWAP_HL:
+            {
+                register8 value = *bus_read(cpu->HL, machine);
+                value = sm83_swap(value, cpu);
+                bus_write_8_bit(cpu->HL, value, machine);
+            }
+            break;
+        case SWAP_A:
+            cpu->A = sm83_swap(cpu->A, cpu);
+            break;
         case SRL_B:
             cpu->B >>= 1;
+            break;
+        case SRL_C:
+            cpu->C >>= 1;
+            break;
+        case SRL_D:
+            cpu->D >>= 1;
+            break;
+        case SRL_E:
+            cpu->E >>= 1;
+            break;
+        case SRL_H:
+            cpu->H >>= 1;
+            break;
+        case SRL_L:
+            cpu->L >>= 1;
+            break;
+        case SRL_HL:
+            {
+                register8 value = *bus_read(cpu->HL, machine);
+                value >>= 1;
+                bus_write_8_bit(cpu->HL, value, machine);
+            }
+            break;
+        case SRL_A:
+            cpu->A >>= 1;
             break;
         default:
             // Enable logging if it's off
@@ -203,6 +256,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
                     cpu->PC += offset_0x28;
                 }
             }
+            break;
+        case ADD_HL_HL:
+            cpu->HL = sm83_add16(cpu->HL, cpu->HL, cpu);
             break;
         case LDI_A_HL:
             cpu->A = *bus_read(cpu->HL++, machine);
@@ -647,6 +703,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case AND_A_U8:
             cpu->A = sm83_and8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
+            break;
+        case JP_HL:
+            cpu->PC = cpu->HL;
             break;
         case LD_U16_A:
             // Scope allows us to declare this variable without compiler warnings

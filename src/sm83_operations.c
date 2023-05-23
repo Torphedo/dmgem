@@ -65,3 +65,15 @@ register8 sm83_rotate_register(register8 reg, cpu_state* cpu) {
     return reg;
 }
 
+// Swap the first and last 4 bits of an 8-bit value.
+register8 sm83_swap(register8 x, cpu_state* cpu) {
+    x = x << 4 | x >> 4;
+
+    cpu->F.subtraction = 0;
+    cpu->F.half_carry = 0;
+    cpu->F.carry = 0;
+    cpu->F.zero = (x == 0);
+
+    return x;
+}
+
