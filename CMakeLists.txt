@@ -11,7 +11,8 @@ set(CMAKE_C_STANDARD 99)
 add_subdirectory(external/arena_allocator)
 add_subdirectory(src)
 
-# Copy binary ALR files to [build]/src/bin/ so they can be accessed during debugging. 
-# It would be better to change the working directory to /alr_parser/, but I couldn't
-# find a good cross-platform (directly from CMake) way to do this.
-file(COPY "bin/" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src/bin)
+# Copy test ROMs to builder folder if present.
+if (EXISTS "bin/")
+    file(COPY "bin/" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src/bin)
+endif()
+
