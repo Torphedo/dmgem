@@ -5,7 +5,8 @@ register8 sm83_add8(register8 x, register8 y, cpu_state* cpu) {
     cpu->F.zero = ((uint8_t)(x + y) == 0);
     cpu->F.subtraction = false;
     cpu->F.half_carry = (((x & 0xF) + (y & 0xF)) > 0xF);
-    cpu->F.carry = ((uint8_t)(x + y) > 0xFF);
+    // We cast to a u16 here so that the value can go higher than 0xFF.
+    cpu->F.carry = ((uint16_t)(x + y) > 0xFF);
     return x + y;
 }
 
@@ -13,14 +14,16 @@ register8 sm83_sub8(register8 x, register8 y, cpu_state* cpu) {
     cpu->F.zero = ((uint8_t)(x - y) == 0);
     cpu->F.subtraction = true;
     cpu->F.half_carry = (((x & 0xF) - (y & 0xF)) > 0xF);
-    cpu->F.carry = ((uint8_t)(x - y) > 0xFF);
+    // We cast to a u16 here so that the value can underflow higher than 0xFF.
+    cpu->F.carry = ((uint16_t)(x - y) > 0xFF);
     return x - y;
 }
 
 register16 sm83_add16(register16 x, register16 y, cpu_state* cpu) {
     cpu->F.subtraction = false;
-    cpu->F.half_carry = ((uint8_t)((x & 0xFFF) + (y & 0xFFF)) > 0xFFF);
-    cpu->F.carry = ((uint8_t)(x + y) > 0xFFFF);
+    cpu->F.half_carry = ((uint32_t)((x & 0xFFF) + (y & 0xFFF)) > 0xFFF);
+    // We cast to a u32 here so that the value can go higher than 0xFFFF.
+    cpu->F.carry = ((uint32_t)(x + y) > 0xFFFF);
     return x + y;
 }
 
