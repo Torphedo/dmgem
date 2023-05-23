@@ -23,5 +23,5 @@ typedef struct {
     uint64_t clock;
 }machine_state;
 
-bool run_machine(char* loaded_rom, uint32_t rom_size);
+bool run_machine(uint8_t* rom_data, uint32_t rom_size);
 
