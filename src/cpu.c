@@ -5,6 +5,7 @@
 
 #include "cpu.h"
 #include "bus.h"
+#include "machine.h"
 #include "sm83_operations.h"
 
 typedef struct {
@@ -70,10 +71,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->BC++;
             break;
         case INC_B:
-            cpu->B = sm83_inc8(cpu->B, cpu);
+            cpu->B = sm83_add8(cpu->B, 1, cpu);
             break;
         case DEC_B:
-            cpu->B = sm83_dec8(cpu->B, cpu);
+            cpu->B = sm83_sub8(cpu->B, 1, cpu);
             break;
         case LD_B_U8:
             cpu->B = *bus_read(cpu->PC++, machine);
@@ -87,10 +88,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->PC += 2;
             break;
         case INC_C:
-            cpu->C = sm83_inc8(cpu->C, cpu);
+            cpu->C = sm83_add8(cpu->C, 1, cpu);
             break;
         case DEC_C:
-            cpu->C = sm83_dec8(cpu->C, cpu);
+            cpu->C = sm83_sub8(cpu->C, 1, cpu);
             break;
         case LD_C_U8:
             cpu->C = *bus_read(cpu->PC++, machine);
@@ -103,13 +104,13 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             bus_write_8_bit(cpu->DE, cpu->A, machine);
             break;
         case INC_DE:
-            cpu->DE = sm83_inc8(cpu->DE, cpu);
+            cpu->DE++;
             break;
         case INC_D:
-            cpu->D = sm83_inc8(cpu->D, cpu);
+            cpu->D = sm83_add8(cpu->D, 1, cpu);
             break;
         case DEC_D:
-            cpu->D = sm83_dec8(cpu->D, cpu);
+            cpu->D = sm83_sub8(cpu->D, 1, cpu);
             break;
         case JR_i8:
             cpu->PC += *(int8_t*) bus_read(cpu->PC++, machine);
@@ -121,10 +122,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->A = *bus_read(cpu->DE, machine);
             break;
         case INC_E:
-            cpu->E = sm83_inc8(cpu->E, cpu);
+            cpu->E = sm83_add8(cpu->E, 1, cpu);
             break;
         case DEC_E:
-            cpu->E = sm83_dec8(cpu->E, cpu);
+            cpu->E = sm83_sub8(cpu->E, 1, cpu);
             break;
         case RRA:
             cpu->A = sm83_rotate_register(cpu->A, cpu);
@@ -149,10 +150,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->HL++;
             break;
         case INC_H:
-            cpu->H = sm83_inc8(cpu->H, cpu);
+            cpu->H = sm83_add8(cpu->H, 1, cpu);
             break;
         case DEC_H:
-            cpu->H = sm83_dec8(cpu->H, cpu);
+            cpu->H = sm83_sub8(cpu->H, 1, cpu);
             break;
         case LD_H_U8:
             // Load u8 into register A and increment PC to next instruction
@@ -171,10 +172,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->A = *bus_read(cpu->HL++, machine);
             break;
         case INC_L:
-            cpu->L = sm83_inc8(cpu->L, cpu);
+            cpu->L = sm83_add8(cpu->L, 1, cpu);
             break;
         case DEC_L:
-            cpu->L = sm83_dec8(cpu->L, cpu);
+            cpu->L = sm83_sub8(cpu->L, 1, cpu);
             break;
         case JR_NC_i8:
             // Scope allows us to declare this variable without compiler warnings
@@ -195,11 +196,31 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case INC_SP:
             cpu->SP++;
             break;
+        case INC_HL_8:
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint16_t address = *(uint16_t*)bus_read(cpu->PC, machine);
+                cpu->PC += 2;
+                register8 value = *bus_read(address, machine);
+                value = sm83_add8(value, 1, cpu);
+                bus_write_8_bit(address, value, machine);
+            }
+            break;
+        case DEC_HL_8:
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint16_t address = *(uint16_t*)bus_read(cpu->PC, machine);
+                cpu->PC += 2;
+                register8 value = *bus_read(address, machine);
+                value = sm83_sub8(value, 1, cpu);
+                bus_write_8_bit(address, value, machine);
+            }
+            break;
         case INC_A:
-            cpu->A = sm83_inc8(cpu->A, cpu);
+            cpu->A = sm83_add8(cpu->A, 1, cpu);
             break;
         case DEC_A:
-            cpu->A = sm83_dec8(cpu->A, cpu);
+            cpu->A = sm83_sub8(cpu->A, 1, cpu);
             break;
         case LD_A_U8:
             // Load u8 into register A and increment PC to next instruction
@@ -688,24 +709,24 @@ static bool execute_decode(cpu_state* cpu, const machine_state* machine) {
                     // INC (HL) 0x34)
                     if (y == 6) {
                         uint8_t value = *bus_read(cpu->HL, machine);
-                        value = sm83_inc8(value, cpu);
+                        value = sm83_add8(value, 1, cpu);
                         bus_write_8_bit(cpu->HL, value, machine);
                     }
                     // INC r[y] (0x04, 0x0C, 0x14, 0x1C, 0x24, 0x2C, 0x3C)
                     else {
-                        *registers[y] = sm83_inc8(*registers[y], cpu);
+                        *registers[y] = sm83_add8(*registers[y], 1, cpu);
                     }
                     break;
                 case 5:
                     // DEC (HL) (0x35)
                     if (y == 6) {
                         uint8_t value = *bus_read(cpu->HL, machine);
-                        value = sm83_dec8(value, cpu);
+                        value = sm83_sub8(value, 1, cpu);
                         bus_write_8_bit(cpu->HL, value, machine);
                     }
                     // DEC r[y] (0x05, 0x0D, 0x15, 0x1D, 0x25, 0x2D, 0x3D)
                     else {
-                        *registers[y] = sm83_dec8(*registers[y], cpu);
+                        *registers[y] = sm83_sub8(*registers[y], 1, cpu);
                     }
                     break;
                 case 6:

@@ -63,8 +63,8 @@ typedef enum {
     LD_SP_U16   = 0x31, // Load U16 into SP
     LDD_HL_A    = 0x32, // Inc/dec, needs careful attention
     INC_SP      = 0x33,
-    INC_HL_8    = 0x34, // 8-bit version of 0x23 that takes longer, and relies on the zero/negative/half carry flags.
-    DEC_HL_8    = 0x35, // 8-bit version of 0x2B that takes longer, and relies on the zero/negative/half carry flags.
+    INC_HL_8    = 0x34, // Increment the byte in RAM at (HL)
+    DEC_HL_8    = 0x35, // Decrement the byte in RAM at (HL)
     LD_HL_U8    = 0x36,
     SCF         = 0x37,
     JR_C_i8     = 0x38, // 2-3 machine cycles, array has it set to 2.

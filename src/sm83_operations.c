@@ -29,20 +29,6 @@ register16 sm83_add16(register16 x, register16 y, cpu_state* cpu) {
     return x + y;
 }
 
-register8 sm83_inc8(register8 x, cpu_state* cpu) {
-    cpu->F.zero = ((uint8_t)(x + 1) == 0);
-    cpu->F.subtraction = false;
-    cpu->F.half_carry = ((uint8_t)((x & 0xF) + (1 & 0xF)) > 0xF);
-    return x + 1;
-}
-
-register8 sm83_dec8(register8 x, cpu_state* cpu) {
-    cpu->F.zero = ((uint8_t)(x - 1) == 0);
-    cpu->F.subtraction = true;
-    cpu->F.half_carry = ((uint8_t)((x & 0xF) - (1 & 0xF)) > 0xF);
-    return x - 1;
-}
-
 register8 sm83_and8(register8 x, register8 y, cpu_state* cpu) {
     cpu->F.zero        = ((uint8_t)(x & y) == 0);
     cpu->F.half_carry  = 1;
