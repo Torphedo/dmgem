@@ -28,7 +28,6 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
         case RET_Z:
         case JP_Z_U16:
         case CALL_Z_U16:
-        case RET_NC:
         case JP_NC_U16:
         case CALL_NC_U16:
         case RET_C:
@@ -43,6 +42,8 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
             if (cpu->F.zero) { return 3; }
         case JR_NC_i8:
             if (!cpu->F.carry) { return 3; }
+        case RET_NC:
+            if (!cpu->F.carry) { return 20; }
         default:
             return opcode_cycles[opcode];
     }
@@ -107,6 +108,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case INC_E:
             cpu->E = sm83_inc8(cpu->E, cpu);
+            break;
+        case RRA:
+            cpu->A = sm83_rotate_register(cpu->A, cpu);
             break;
         case JR_NZ_i8:
             // Scope allows us to declare this variable without compiler warnings
@@ -278,21 +282,27 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->A = cpu->A; // NOP, probably optimized out
             break;
         case ADD_A_B:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->B, cpu);
             break;
         case ADD_A_C:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->C, cpu);
             break;
         case ADD_A_D:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->D, cpu);
             break;
         case ADD_A_E:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->E, cpu);
             break;
         case ADD_A_H:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->H, cpu);
             break;
         case ADD_A_L:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->L, cpu);
             break;
         case AND_A_B:
@@ -393,6 +403,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             bus_write_16_bit(cpu->SP, cpu->BC, machine);
             break;
         case ADD_A_U8:
+            cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
             break;
         case RET:
@@ -415,6 +426,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
 
                 cpu->PC = func_addr; // Jump to target address
             }
+            break;
+        case ADC_A_U8:
+            // DON'T clear the carry flag before adding, unlike add instructions
+            cpu->A = sm83_add8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
             break;
         case POP_DE:
             cpu->DE = *(uint16_t*) bus_read(cpu->SP, machine);

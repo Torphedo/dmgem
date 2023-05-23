@@ -2,12 +2,14 @@
 #include "bus.h"
 
 register8 sm83_add8(register8 x, register8 y, cpu_state* cpu) {
-    cpu->F.zero = ((uint8_t)(x + y) == 0);
+    register8 result = x + y + cpu->F.carry;
+
+    cpu->F.zero = ((uint8_t)result == 0);
     cpu->F.subtraction = false;
     cpu->F.half_carry = (((x & 0xF) + (y & 0xF)) > 0xF);
     // We cast to a u16 here so that the value can go higher than 0xFF.
-    cpu->F.carry = ((uint16_t)(x + y) > 0xFF);
-    return x + y;
+    cpu->F.carry = ((uint16_t)result > 0xFF);
+    return result;
 }
 
 register8 sm83_sub8(register8 x, register8 y, cpu_state* cpu) {
@@ -63,5 +65,17 @@ register8 sm83_or8(register8 x, register8 y, cpu_state* cpu) {
     cpu->F.carry       = 0;
     cpu->F.subtraction = 0;
     return x | y;
+}
+
+// Rotate the input register, using the carry flag as a 9th bit.
+register8 sm83_rotate_register(register8 reg, cpu_state* cpu) {
+    cpu->F.subtraction = false;
+    cpu->F.half_carry = false;
+
+    uint8_t carry = reg | 0b00000001;
+    reg = (cpu->F.carry << 7) | (reg >> 1);
+    cpu->F.zero = (reg == 0);
+    cpu->F.carry = carry;
+    return reg;
 }
 
