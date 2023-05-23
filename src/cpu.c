@@ -520,6 +520,15 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
 
 // See https://gb-archive.github.io/salvage/decoding_gbz80_opcodes/Decoding%20Gamboy%20Z80%20Opcodes.html for more information
 
+// This decodes instructions by patterns in their binary opcodes, rather than
+// hardcoding a behaviour for each case. This is (theoretically) simpler, but
+// in practice the code is much more confusing.
+//
+// The idea is that we only need to implement each operation once, and it will
+// handle every possible combination of registers that might use the operation.
+// So instead of a ton of cases for every possible register OR operation, we
+// would implement OR between registers once and use the binary opcode to 
+// figure out which registers to use.
 static bool execute_decode(cpu_state* cpu, const machine_state* machine) {
     cpu->executing = false;
     uint8_t opcode = *bus_read(cpu->PC, machine);
