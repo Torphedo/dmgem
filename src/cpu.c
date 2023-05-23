@@ -69,6 +69,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case INC_BC:
             cpu->BC++;
             break;
+        case INC_B:
+            cpu->B = sm83_inc8(cpu->B, cpu);
+            break;
         case DEC_B:
             cpu->B = sm83_dec8(cpu->B, cpu);
             break;
@@ -82,6 +85,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
                 bus_write_16_bit(address_0x08, cpu->SP, machine);
             }
             cpu->PC += 2;
+            break;
+        case INC_C:
+            cpu->C = sm83_inc8(cpu->C, cpu);
             break;
         case DEC_C:
             cpu->C = sm83_dec8(cpu->C, cpu);
@@ -102,6 +108,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case INC_D:
             cpu->D = sm83_inc8(cpu->D, cpu);
             break;
+        case DEC_D:
+            cpu->D = sm83_dec8(cpu->D, cpu);
+            break;
         case JR_i8:
             cpu->PC += *(int8_t*) bus_read(cpu->PC++, machine);
             break;
@@ -113,6 +122,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case INC_E:
             cpu->E = sm83_inc8(cpu->E, cpu);
+            break;
+        case DEC_E:
+            cpu->E = sm83_dec8(cpu->E, cpu);
             break;
         case RRA:
             cpu->A = sm83_rotate_register(cpu->A, cpu);
@@ -182,6 +194,12 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case INC_SP:
             cpu->SP++;
+            break;
+        case INC_A:
+            cpu->A = sm83_inc8(cpu->A, cpu);
+            break;
+        case DEC_A:
+            cpu->A = sm83_dec8(cpu->A, cpu);
             break;
         case LD_A_U8:
             // Load u8 into register A and increment PC to next instruction
