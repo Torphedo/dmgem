@@ -8,7 +8,6 @@ set(CMAKE_C_STANDARD 99)
 
 # Using this setup to run other CMakeLists.txt build scripts makes it
 # easier to add unit tests or other separate scripts in the future.
-add_subdirectory(external/arena_allocator)
 add_subdirectory(src)
 
 # Copy test ROMs to builder folder if present.
