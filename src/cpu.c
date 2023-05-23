@@ -310,14 +310,101 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case LD_C_A:
             cpu->C = cpu->A;
             break;
+        case LD_D_B:
+            cpu->D = cpu->B;
+            break;
+        case LD_D_C:
+            cpu->D = cpu->C;
+            break;
+        case LD_D_D:
+            cpu->D = cpu->D;
+            break;
+        case LD_D_E:
+            cpu->D = cpu->E;
+            break;
+        case LD_D_H:
+            cpu->D = cpu->H;
+            break;
+        case LD_D_L:
+            cpu->D = cpu->L;
+            break;
         case LD_D_HL:
             cpu->D = *bus_read(cpu->HL, machine);
             break;
         case LD_D_A:
             cpu->D = cpu->A;
             break;
+        case LD_E_B:
+            cpu->E = cpu->B;
+            break;
+        case LD_E_C:
+            cpu->E = cpu->C;
+            break;
+        case LD_E_D:
+            cpu->E = cpu->D;
+            break;
+        case LD_E_E:
+            cpu->E = cpu->E;
+            break;
+        case LD_E_H:
+            cpu->E = cpu->H;
+            break;
+        case LD_E_L:
+            cpu->E = cpu->L;
+            break;
+        case LD_E_HL:
+            cpu->E = *bus_read(cpu->HL, machine);
+            break;
         case LD_E_A:
             cpu->E = cpu->A;
+            break;
+        case LD_H_B:
+            cpu->H = cpu->B;
+            break;
+        case LD_H_C:
+            cpu->H = cpu->C;
+            break;
+        case LD_H_D:
+            cpu->H = cpu->D;
+            break;
+        case LD_H_E:
+            cpu->H = cpu->E;
+            break;
+        case LD_H_H:
+            cpu->H = cpu->H;
+            break;
+        case LD_H_L:
+            cpu->H = cpu->L;
+            break;
+        case LD_H_HL:
+            cpu->H = *bus_read(cpu->HL, machine);
+            break;
+        case LD_H_A:
+            cpu->H = cpu->A;
+            break;
+        case LD_L_B:
+            cpu->L = cpu->B;
+            break;
+        case LD_L_C:
+            cpu->L = cpu->C;
+            break;
+        case LD_L_D:
+            cpu->L = cpu->D;
+            break;
+        case LD_L_E:
+            cpu->L = cpu->E;
+            break;
+        case LD_L_H:
+            cpu->L = cpu->H;
+            break;
+        case LD_L_L:
+            cpu->L = cpu->L;
+            break;
+        case LD_L_HL:
+            cpu->L = *bus_read(cpu->HL, machine);
+            break;
+        case LD_L_A:
+            cpu->L = cpu->A;
             break;
         case LD_HL_B:
             bus_write_8_bit(cpu->HL, cpu->B, machine);
@@ -357,6 +444,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case LD_A_L:
             cpu->A = cpu->L;
+            break;
+        case LD_A_HL:
+            cpu->A = *bus_read(cpu->HL, machine);
             break;
         case LD_A_A:
             cpu->A = cpu->A; // NOP, probably optimized out
