@@ -11,10 +11,8 @@ static const char nintendo_logo[] = {
         0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
 };
 
-uint8_t ram_bank_count(cart_header* cart)
-{
-    switch (cart->ram_size)
-    {
+uint8_t ram_bank_count(cart_header* cart) {
+    switch (cart->ram_size) {
         case 2:
             return 1;
         case 3:
@@ -28,11 +26,9 @@ uint8_t ram_bank_count(cart_header* cart)
     }
 }
 
-hardware_flags get_cart_hardware(cart_header* cart)
-{
+hardware_flags get_cart_hardware(cart_header* cart) {
     hardware_flags output = {0};
-    switch (cart->cart_hardware_flags)
-    {
+    switch (cart->cart_hardware_flags) {
         case ROM_ONLY:
             break;
         case MBC1_ONLY:
@@ -129,55 +125,45 @@ hardware_flags get_cart_hardware(cart_header* cart)
     return output;
 }
 
-void print_rom_info(cart_header* rom_header)
-{
-    if (memcmp(&nintendo_logo, rom_header->nintendo_logo, sizeof(nintendo_logo)) != 0)
-    {
+void print_rom_info(cart_header* rom_header) {
+    if (memcmp(&nintendo_logo, rom_header->nintendo_logo, sizeof(nintendo_logo)) != 0) {
         log_error(WARNING, "Failed Nintendo logo check, proceeding anyway\n");
     }
     // In older games, 16 bytes were used for the ROM name. In newer games, only 11 bytes are available (adding 1 to account for null terminator)
-    if (strlen(rom_header->name_old_format) + 1 > 11)
-    {
+    if (strlen(rom_header->name_old_format) + 1 > 11) {
         log_error(INFO, "ROM Name: %s\n", rom_header->name_old_format);
     }
-    else
-    {
+    else {
         log_error(INFO, "ROM Name: %s\n", rom_header->name_new_format);
         log_error(INFO, "Publisher Code: %c%c%c%c\n", rom_header->manufacturer_code[0], rom_header->manufacturer_code[1], rom_header->manufacturer_code[2], rom_header->manufacturer_code[3]);
         // TODO: Detect PGB Mode (https://gbdev.io/pandocs/The_Cartridge_Header.html#0143--cgb-flag)
-        if (rom_header->color_support == 0x80 || rom_header->color_support == 0xC0)
-        {
+        if (rom_header->color_support == 0x80 || rom_header->color_support == 0xC0) {
             log_error(INFO, "This game supports color enhancements, but is compatible with an original Game Boy.\n");
         }
-        else
-        {
+        else {
             log_error(WARNING, "Unimplemented: Console should be in \"PGB\" mode (0x%x)\n", rom_header->color_support);
         }
     }
-    if (rom_header->rom_size < 9)
-    {
+    if (rom_header->rom_size < 9) {
         uint32_t rom_size = 2 * (1 << rom_header->rom_size);
         log_error(INFO, "ROM Size: %d banks (%dKiB)\n", rom_size, rom_size * 16);
     }
-    if (rom_header->ram_size != 0 && rom_header->ram_size != 1)
-    {
+    if (rom_header->ram_size != 0 && rom_header->ram_size != 1) {
         uint8_t ram_banks = ram_bank_count(rom_header);
         log_error(INFO, "Cart has %d 8KiB RAM bank(s) (%dKiB total)\n", ram_banks, ram_banks * 8);
     }
-    else
-    {
+    else {
         log_error(INFO, "Cart has no extra RAM.\n");
     }
 
     log_error(INFO, "Card Hardware code: 0x%x\n", rom_header->cart_hardware_flags);
 
-    if (rom_header->region == 0)
-    {
+    if (rom_header->region == 0) {
         log_error(INFO, "ROM Region: World\n");
     }
-    else
-    {
+    else {
         log_error(INFO, "ROM Region: Overseas only\n");
     }
     log_error(INFO, "Game Version: %d\n", rom_header->game_version);
 }
+

@@ -1,9 +1,9 @@
 #pragma once
+#include <stdint.h>
 #include <stdbool.h>
 
 // Memory controller types
-typedef enum
-{
+typedef enum {
     NONE,
     MBC1,
     MBC2,
@@ -13,8 +13,7 @@ typedef enum
     MBC7
 }controller_type;
 
-typedef struct
-{
+typedef struct {
     uint8_t* console_memory; // Machine's 16-bit address space
     uint8_t* cartridge_rom; // Full ROM data loaded from the input file (full cartridge ROM data)
     uint8_t* external_ram; // External cartridge RAM
@@ -25,3 +24,4 @@ typedef struct
 }machine_state;
 
 bool run_machine(char* loaded_rom, uint32_t rom_size);
+

@@ -7,8 +7,7 @@
 #include "bus.h"
 #include "sm83_operations.h"
 
-typedef struct
-{
+typedef struct {
     uint8_t unused: 4;
     bool joypad: 1;
     bool serial: 1;
@@ -17,13 +16,12 @@ typedef struct
     bool vblank: 1;
 }interrupt_flags;
 
-static uint8_t get_execution_time(const machine_state* machine, const cpu_state* cpu)
-{
+static uint8_t get_execution_time(const machine_state* machine, const cpu_state* cpu) {
     uint16_t opcode = *bus_read(cpu->PC, machine);
-    switch (opcode)
-    {
-        // These instructions have variable execution times depending on the state of the CPU. If they don't need to
-        // take the slower path, the value can just be fetched from the table.
+    switch (opcode) {
+        // These instructions have variable execution times depending on the
+        // state of the CPU. If they don't need to take the slower path, the
+        // value can just be fetched from the table.
         case JR_C_i8:
         case RET_NZ:
         case JP_NZ_U16:
@@ -50,8 +48,7 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
     }
 }
 
-static bool execute_switch(cpu_state* cpu, const machine_state* machine)
-{
+static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
     cpu->executing = false;
     uint8_t opcode = *bus_read(cpu->PC, machine);
     uint16_t opcode_pc = cpu->PC; // Program counter before execution so that the correct one can be printed
@@ -73,8 +70,11 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->B = *bus_read(cpu->PC++, machine);
             break;
         case LD_U16_SP:
-            uint16_t address_0x08 = *(uint16_t*) bus_read(cpu->PC, machine);
-            bus_write_16_bit(address_0x08, cpu->SP, machine);
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint16_t address_0x08 = *(uint16_t*) bus_read(cpu->PC, machine);
+                bus_write_16_bit(address_0x08, cpu->SP, machine);
+            }
             cpu->PC += 2;
             break;
         case DEC_C:
@@ -109,8 +109,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->E = sm83_inc8(cpu->E, cpu);
             break;
         case JR_NZ_i8:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 int8_t offset_0x20 = *(int8_t*) bus_read(cpu->PC++, machine);
                 if (!cpu->F.zero) {
                     cpu->PC += offset_0x20;
@@ -138,8 +138,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->H = *bus_read(cpu->PC++, machine);
             break;
         case JR_Z_i8:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 int8_t offset_0x28 = *(int8_t*) bus_read(cpu->PC++, machine);
                 if (cpu->F.zero) {
                     cpu->PC += offset_0x28;
@@ -156,8 +156,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->L = sm83_dec8(cpu->L, cpu);
             break;
         case JR_NC_i8:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 int8_t offset_0x30 = *(int8_t*) bus_read(cpu->PC++, machine);
                 if (!cpu->F.carry) {
                     cpu->PC += offset_0x30;
@@ -377,8 +377,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->PC = *(uint16_t*) bus_read(cpu->PC, machine);
             break;
         case CALL_NZ_U16:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 uint16_t func_addr_0xC4 = *(uint16_t*) bus_read(cpu->PC, machine);
                 cpu->PC += 2; // Move PC to next opcode
                 if (!cpu->F.zero) {
@@ -404,8 +404,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->PC += 2;
             break;
         case CALL_U16:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 uint16_t func_addr = *(uint16_t*) bus_read(cpu->PC, machine);
                 cpu->PC += 2; // Move PC to next opcode
 
@@ -425,12 +425,18 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             bus_write_16_bit(cpu->SP, cpu->DE, machine);
             break;
         case SUB_A_U8:
-            uint8_t value = *bus_read(cpu->PC++, machine);
-            cpu->A = sm83_sub8(cpu->A, value, cpu);
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint8_t value = *bus_read(cpu->PC++, machine);
+                cpu->A = sm83_sub8(cpu->A, value, cpu);
+            }
             break;
         case LD_FF00U8_A:
-            uint8_t offset0xE0 = *bus_read(cpu->PC++, machine);
-            bus_write_8_bit(0xFF00 + offset0xE0, cpu->A, machine);
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint8_t offset0xE0 = *bus_read(cpu->PC++, machine);
+                bus_write_8_bit(0xFF00 + offset0xE0, cpu->A, machine);
+            }
             break;
         case POP_HL:
             cpu->HL = *(uint16_t*) bus_read(cpu->SP, machine);
@@ -444,19 +450,22 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->A = sm83_and8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
             break;
         case LD_U16_A:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 uint16_t addr = *(uint16_t*) bus_read(cpu->PC, machine);
                 bus_write_8_bit(addr, cpu->A, machine);
-                cpu->PC += 2;
             }
+            cpu->PC += 2;
             break;
         case XOR_A_U8:
             cpu->A = sm83_xor8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
             break;
         case LD_A_FF00U8:
-            uint8_t offset_0xF0 = *bus_read(cpu->PC++, machine);
-            cpu->A = *bus_read(0xFF00 + offset_0xF0, machine);
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint8_t offset_0xF0 = *bus_read(cpu->PC++, machine);
+                cpu->A = *bus_read(0xFF00 + offset_0xF0, machine);
+            }
             break;
         case POP_AF:
             cpu->AF = *(uint16_t*) bus_read(cpu->SP, machine);
@@ -473,8 +482,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->A = sm83_or8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
             break;
         case LD_A_U16:
+            // Scope allows us to declare this variable without compiler warnings
             {
-                // Adding a scope here fixes builds on some compilers because of C quirks
                 uint16_t addr = *(uint16_t*) bus_read(cpu->PC, machine);
                 cpu->PC += 2;
                 cpu->A = *bus_read(addr, machine);
@@ -484,6 +493,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             cpu->IME = 0b11111111; // 0xFF
             break;
         case CP_A_U8:
+            // Scope allows us to declare this variable without compiler warnings
             {
                 uint8_t result = cpu->A - *bus_read(cpu->PC, machine);
                 uint8_t result_for_carry = cpu->A & 0xFF - *bus_read(cpu->PC, machine) & 0xFF;
@@ -495,8 +505,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
             }
             break;
         default:
+            // Enable logging if it's off
             enable_logging();
-            log_error(CRITICAL, "execute_switch(): Illegal or unimplemented instruction 0x%02x at $%04x, exiting.", opcode, cpu->PC - 1);
+            log_error(CRITICAL, "execute_switch(): Illegal or unimplemented instruction 0x%02x at $%04x, exiting.\n", opcode, cpu->PC - 1);
             return false;
     }
     log_error(DEBUG, "execute_switch(): Executed instruction opcode 0x%02x at $%04x\n",opcode, opcode_pc);
@@ -509,8 +520,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine)
 
 // See https://gb-archive.github.io/salvage/decoding_gbz80_opcodes/Decoding%20Gamboy%20Z80%20Opcodes.html for more information
 
-static bool execute_decode(cpu_state* cpu, const machine_state* machine)
-{
+static bool execute_decode(cpu_state* cpu, const machine_state* machine) {
     cpu->executing = false;
     uint8_t opcode = *bus_read(cpu->PC, machine);
     uint8_t x = (opcode & 0b11000000) >> 6;
@@ -538,19 +548,16 @@ static bool execute_decode(cpu_state* cpu, const machine_state* machine)
             &cpu->B, &cpu->C, &cpu->D, &cpu->E, &cpu->H, &cpu->L, NULL, &cpu->A
     };
 
-    switch (x)
-    {
+    switch (x) {
         case 0:
-            switch (z)
-            {
+            switch (z) {
                 case 0:
                     // NOP (0x00)
                     if (y == 0) {
                         return true;
                     }
                     // LD (nn), SP (0x08)
-                    else if (y == 1)
-                    {
+                    else if (y == 1) {
                         uint16_t address = *(uint16_t*) bus_read(cpu->PC, machine);
                         cpu->PC += 2;
                         bus_write_16_bit(address, cpu->SP, machine);
@@ -566,72 +573,61 @@ static bool execute_decode(cpu_state* cpu, const machine_state* machine)
                     break;
                 case 1:
                     // LD register_pairs[p], nn (0x01, 0x11, 0x21, 0x31)
-                    if (q == 0)
-                    {
+                    if (q == 0) {
                         uint16_t value = *(uint16_t*) bus_read(cpu->PC, machine);
                         cpu->PC += 2;
                         *register_pairs[p] = value;
                     }
                     // ADD HL, register_pairs[p]
-                    else // q is 1 bit, so this is equivalent to else if (q == 1)
-                    {
+                    else {
+                        // q is 1 bit, so this is equivalent to else if (q == 1)
                         cpu->HL = sm83_add16(cpu->HL, *register_pairs[p], cpu);
                     }
                     break;
                 case 2:
-                    if (q == 0)
-                    {
+                    if (q == 0) {
                         // LD (BC), A & LD (DE), A (0x02, 0x12)
-                        if (p == 0 || p == 1)
-                        {
+                        if (p == 0 || p == 1) {
                             bus_write_8_bit(*register_pairs[p], cpu->A, machine);
                         }
                         // LD (HL+), A (0x22)
-                        else if (p == 2)
-                        {
+                        else if (p == 2) {
                             bus_write_8_bit(cpu->HL++, cpu->A, machine);
                         }
                         // LD (HL-), A (0x32)
-                        else if (p == 3)
-                        {
+                        else if (p == 3) {
                             bus_write_8_bit(cpu->HL--, cpu->A, machine);
                         }
                     }
                     else
                     {
                         // LD A, (BC) & LD A, (DE) (0x0A, 0x1A)
-                        if (p == 0 || p == 1)
-                        {
+                        if (p == 0 || p == 1) {
                             cpu->A = *bus_read(*register_pairs[p], machine);
                         }
                             // LD A, (HL+) (0x2A)
-                        else if (p == 2)
-                        {
+                        else if (p == 2) {
                             cpu->A = *bus_read(cpu->HL++, machine);
                         }
                             // LD A, (HL-) (0x3A)
-                        else if (p == 3)
-                        {
+                        else if (p == 3) {
                             cpu->A = *bus_read(cpu->HL--, machine);
                         }
                     }
                     break;
                 case 3:
                     // INC rp[p] (0x03, 0x13, 0x23, 0x33)
-                    if (q == 0)
-                    {
+                    if (q == 0) {
                         *register_pairs[p] += 1;
                     }
                     // DEC rp[p] (0x0B, 0x1B, 0x2B, 0x3B)
-                    else
-                    {
+                    else {
                         *register_pairs[p] -= 1;
                     }
                     break;
                 case 4:
                     // INC (HL) 0x34)
-                    if (y == 6)
-                    {
+                    if (y == 6) {
                         uint8_t value = *bus_read(cpu->HL, machine);
                         value = sm83_inc8(value, cpu);
                         bus_write_8_bit(cpu->HL, value, machine);
@@ -643,8 +639,7 @@ static bool execute_decode(cpu_state* cpu, const machine_state* machine)
                     break;
                 case 5:
                     // DEC (HL) (0x35)
-                    if (y == 6)
-                    {
+                    if (y == 6) {
                         uint8_t value = *bus_read(cpu->HL, machine);
                         value = sm83_dec8(value, cpu);
                         bus_write_8_bit(cpu->HL, value, machine);
@@ -670,22 +665,19 @@ static bool execute_decode(cpu_state* cpu, const machine_state* machine)
     return true;
 }
 
-bool tick(const machine_state* machine)
-{
+bool tick(const machine_state* machine) {
     static cpu_state cpu = {
             .PC = 0x100, // Initialize program counter to ROM entry point
             .IME = 0b11111111
     };
 
-    if (!cpu.executing)
-    {
+    if (!cpu.executing) {
         cpu.remaining_execution_cycles = get_execution_time(machine, &cpu);
         cpu.executing = true;
     }
     cpu.remaining_execution_cycles--; // Update every cycle
 
-    if (cpu.remaining_execution_cycles == 0)
-    {
+    if (cpu.remaining_execution_cycles == 0) {
         return execute_switch(&cpu, machine);
     }
     // Copy IME byte to interrupt flag
@@ -693,3 +685,4 @@ bool tick(const machine_state* machine)
 
     return true;
 }
+

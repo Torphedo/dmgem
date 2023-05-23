@@ -10,3 +10,4 @@ register8 sm83_dec8(register8 x, cpu_state* cpu);
 register8 sm83_and8(register8 x, register8 y, cpu_state* cpu);
 register8 sm83_xor8(register8 x, register8 y, cpu_state* cpu);
 register8 sm83_or8(register8 x, register8 y, cpu_state* cpu);
+

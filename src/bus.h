@@ -20,3 +20,4 @@ uint8_t* bus_read(uint16_t address, const machine_state* machine);
 
 void bus_write_8_bit(uint16_t address, uint8_t value, const machine_state* machine);
 void bus_write_16_bit(uint16_t address, uint16_t value, const machine_state* machine);
+

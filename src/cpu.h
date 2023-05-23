@@ -4,8 +4,10 @@
 
 #include "machine.h"
 
-typedef enum
-{
+typedef uint8_t register8;
+typedef uint16_t register16;
+
+typedef enum {
     NOP         = 0x00,
     LD_BC_U16   = 0x01,
     LD_BC_A     = 0x02,
@@ -279,8 +281,8 @@ typedef enum
     RST_38      = 0xFF // Reset (jump to $0038)
 }unprefixed_opcode;
 
-static const uint8_t opcode_cycles[] =
-{
+// The number of CPU cycles that each instruction takes.
+static const uint8_t opcode_cycles[] = {
         1, 3, 2, 2, 1, 1, 2, 1, 5, 2, 2, 2, 1, 1, 2, 1,
         1, 3, 2, 2, 1, 1, 2, 1, 3, 2, 2, 2, 1, 1, 2, 1,
         2, 3, 2, 2, 1, 1, 2, 1, 2, 2, 2, 2, 1, 1, 2, 1,
@@ -299,11 +301,7 @@ static const uint8_t opcode_cycles[] =
         3, 3, 2, 1, 1, 4, 2, 4, 3, 2, 4, 1, 1, 1, 2, 4
 };
 
-typedef uint8_t register8;
-typedef uint16_t register16;
-
-typedef struct
-{
+typedef struct {
     union {
         register16 AF;
         struct {
@@ -346,3 +344,4 @@ typedef struct
 }cpu_state;
 
 bool tick(const machine_state* machine);
+

@@ -7,18 +7,15 @@
 #include "machine.h"
 #include "arguments.h"
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     // Parse command-line arguments.
     flags options = parse_arguments(argc, argv);
 
-    if (options.filename == NULL)
-    {
+    if (options.filename == NULL) {
         log_error(CRITICAL, "main(): No filenames detected.\n");
         return 1;
     }
-    if (options.silent)
-    {
+    if (options.silent) {
         disable_logging();
     }
 
@@ -33,3 +30,4 @@ int main(int argc, char* argv[])
     uint8_t exit_code = run_machine(options.filename, filesize); // Main emulation loop
     return exit_code;
 }
+

@@ -2,8 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef struct
-{
+typedef struct {
     uint8_t entry_point[4];
     uint8_t nintendo_logo[48];
     union {
@@ -27,8 +26,7 @@ typedef struct
     uint16_t global_checksum;
 }cart_header;
 
-typedef enum
-{
+typedef enum {
     ROM_ONLY = 0x0,
     MBC1_ONLY = 0x1,
     MBC1_RAM = 0x2,
@@ -59,8 +57,7 @@ typedef enum
     HuC1_RAM_BATTERY = 0xFF
 }cart_hardware;
 
-typedef struct
-{
+typedef struct {
     bool has_ram: 1;
     bool has_battery: 1;
     bool has_timer: 1;
@@ -81,3 +78,4 @@ typedef struct
 uint8_t ram_bank_count(cart_header* cart);
 hardware_flags get_cart_hardware(cart_header* cart);
 void print_rom_info(cart_header* rom_header);
+
