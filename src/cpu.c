@@ -55,10 +55,46 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
     }
 }
 
+// Used to handle opcodes prefixed with 0xCB.
+static bool execute_prefix(cpu_state* cpu, const machine_state* machine) {
+    uint8_t opcode = *bus_read(cpu->PC, machine);
+    switch (opcode) {
+        case RR_B:
+            cpu->B = sm83_rotate_register(cpu->B, cpu);
+            break;
+        case RR_C:
+            cpu->C = sm83_rotate_register(cpu->C, cpu);
+            break;
+        case RR_D:
+            cpu->D = sm83_rotate_register(cpu->D, cpu);
+            break;
+        case RR_E:
+            cpu->E = sm83_rotate_register(cpu->E, cpu);
+            break;
+        case RR_H:
+            cpu->H = sm83_rotate_register(cpu->H, cpu);
+            break;
+        case RR_L:
+            cpu->L = sm83_rotate_register(cpu->L, cpu);
+            break;
+        case SRL_B:
+            cpu->B >>= 1;
+            break;
+        default:
+            // Enable logging if it's off
+            enable_logging();
+            log_error(CRITICAL, "execute_prefix(): Unknown opcode 0xCB%02x at $%04x\n", opcode, cpu->PC - 1);
+            return false;
+    }
+    // Callee handles incrementing program counter.
+    return true;
+}
+
 static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
     cpu->executing = false;
     uint8_t opcode = *bus_read(cpu->PC, machine);
-    uint16_t opcode_pc = cpu->PC; // Program counter before execution so that the correct one can be printed
+    // Program counter before execution so the right address is printed at the end
+    uint16_t opcode_pc = cpu->PC;
     cpu->PC++; // Increment PC to save a line of code on all single-byte opcodes
     switch (opcode) {
         case NOP:
@@ -461,8 +497,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->SP += 2;
             break;
         case PREFIX:
-            log_error(WARNING, "Unimplemented prefixed 0xCB instruction. Skipping...\n");
-            cpu->PC += 2;
+            if (!execute_prefix(cpu, machine)) {
+                return false;
+            }
+            cpu->PC++; // Second half of the 2-byte opcode 0xCB XX.
             break;
         case CALL_U16:
             // Scope allows us to declare this variable without compiler warnings
