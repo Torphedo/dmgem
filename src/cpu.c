@@ -22,28 +22,33 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
         // These instructions have variable execution times depending on the
         // state of the CPU. If they don't need to take the slower path, the
         // value can just be fetched from the table.
-        case JR_C_i8:
-        case RET_NZ:
         case JP_NZ_U16:
-        case RET_Z:
         case JP_Z_U16:
         case CALL_Z_U16:
         case JP_NC_U16:
         case CALL_NC_U16:
-        case RET_C:
         case JP_C_U16:
         case CALL_C_U16:
             log_error(WARNING, "Instruction encountered at $%04x needs special logic to determine its execution time. Defaulting to best-case execution time...\n", cpu->PC);
         case CALL_NZ_U16:
             if (!cpu->F.zero) { return 6; }
-        case JR_NZ_i8:
-            if (!cpu->F.zero) { return 3; }
         case JR_Z_i8:
             if (cpu->F.zero) { return 3; }
+        case JR_NZ_i8:
+            if (!cpu->F.zero) { return 3; }
+        case JR_C_i8:
+            if (cpu->F.carry) { return 3; }
         case JR_NC_i8:
             if (!cpu->F.carry) { return 3; }
+
+        case RET_C:
+            if (cpu->F.carry) { return 5; }
         case RET_NC:
-            if (!cpu->F.carry) { return 20; }
+            if (!cpu->F.carry) { return 5; }
+        case RET_Z:
+            if (cpu->F.zero) { return 5; }
+        case RET_NZ:
+            if (!cpu->F.zero) { return 5; }
         default:
             return opcode_cycles[opcode];
     }
@@ -377,6 +382,12 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case OR_A_A:
             cpu->A = sm83_or8(cpu->A, cpu->A, cpu); // NOP, probably optimized out
             break;
+        case RET_NZ:
+            if (!cpu->F.zero) {
+                cpu->PC = *(uint16_t*) bus_read(cpu->SP, machine);
+                cpu->SP += 2;
+            }
+            break;
         case POP_BC:
             cpu->BC = *(uint16_t*) bus_read(cpu->SP, machine);
             cpu->SP += 2;
@@ -430,6 +441,12 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case ADC_A_U8:
             // DON'T clear the carry flag before adding, unlike add instructions
             cpu->A = sm83_add8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
+            break;
+        case RET_NC:
+            if (!cpu->F.carry) {
+                cpu->PC = *(uint16_t*) bus_read(cpu->SP, machine);
+                cpu->SP += 2;
+            }
             break;
         case POP_DE:
             cpu->DE = *(uint16_t*) bus_read(cpu->SP, machine);
