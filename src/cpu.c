@@ -23,14 +23,16 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
         // These instructions have variable execution times depending on the
         // state of the CPU. If they don't need to take the slower path, the
         // value can just be fetched from the table.
-        case JP_NZ_U16:
         case JP_Z_U16:
         case CALL_Z_U16:
-        case JP_NC_U16:
         case CALL_NC_U16:
         case JP_C_U16:
         case CALL_C_U16:
             log_error(WARNING, "Instruction encountered at $%04x needs special logic to determine its execution time. Defaulting to best-case execution time...\n", cpu->PC);
+        case JP_NC_U16:
+            if (!cpu->F.carry) { return 4; }
+        case JP_NZ_U16:
+            if (!cpu->F.zero) { return 4; }
         case CALL_NZ_U16:
             if (!cpu->F.zero) { return 6; }
         case JR_Z_i8:
@@ -60,22 +62,22 @@ static bool execute_prefix(cpu_state* cpu, const machine_state* machine) {
     uint8_t opcode = *bus_read(cpu->PC, machine);
     switch (opcode) {
         case RR_B:
-            cpu->B = sm83_rotate_register(cpu->B, cpu);
+            cpu->B = sm83_rotate_right(cpu->B, cpu);
             break;
         case RR_C:
-            cpu->C = sm83_rotate_register(cpu->C, cpu);
+            cpu->C = sm83_rotate_right(cpu->C, cpu);
             break;
         case RR_D:
-            cpu->D = sm83_rotate_register(cpu->D, cpu);
+            cpu->D = sm83_rotate_right(cpu->D, cpu);
             break;
         case RR_E:
-            cpu->E = sm83_rotate_register(cpu->E, cpu);
+            cpu->E = sm83_rotate_right(cpu->E, cpu);
             break;
         case RR_H:
-            cpu->H = sm83_rotate_register(cpu->H, cpu);
+            cpu->H = sm83_rotate_right(cpu->H, cpu);
             break;
         case RR_L:
-            cpu->L = sm83_rotate_register(cpu->L, cpu);
+            cpu->L = sm83_rotate_right(cpu->L, cpu);
             break;
         case SWAP_B:
             cpu->B = sm83_swap(cpu->B, cpu);
@@ -216,8 +218,11 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case DEC_E:
             cpu->E = sm83_sub8(cpu->E, 1, cpu);
             break;
+        case LD_E_U8:
+            cpu->E = *bus_read(cpu->PC++, machine);
+            break;
         case RRA:
-            cpu->A = sm83_rotate_register(cpu->A, cpu);
+            cpu->A = sm83_rotate_right(cpu->A, cpu);
             break;
         case JR_NZ_i8:
             // Scope allows us to declare this variable without compiler warnings
@@ -531,6 +536,59 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, cpu->L, cpu);
             break;
+        case ADD_A_A:
+            cpu->F.carry = 0;
+            cpu->A = sm83_add8(cpu->A, cpu->A, cpu);
+            break;
+        case ADC_A_B:
+            cpu->A = sm83_add8(cpu->A, cpu->B, cpu);
+            break;
+        case ADC_A_C:
+            cpu->A = sm83_add8(cpu->A, cpu->C, cpu);
+            break;
+        case ADC_A_D:
+            cpu->A = sm83_add8(cpu->A, cpu->D, cpu);
+            break;
+        case ADC_A_E:
+            cpu->A = sm83_add8(cpu->A, cpu->E, cpu);
+            break;
+        case ADC_A_H:
+            cpu->A = sm83_add8(cpu->A, cpu->H, cpu);
+            break;
+        case ADC_A_L:
+            cpu->A = sm83_add8(cpu->A, cpu->L, cpu);
+            break;
+        case ADC_A_A:
+            cpu->A = sm83_add8(cpu->A, cpu->A, cpu);
+            break;
+        case SUB_A_B:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->B, cpu);
+            break;
+        case SUB_A_C:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->C, cpu);
+            break;
+        case SUB_A_D:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->D, cpu);
+            break;
+        case SUB_A_E:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->E, cpu);
+            break;
+        case SUB_A_H:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->H, cpu);
+            break;
+        case SUB_A_L:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->L, cpu);
+            break;
+        case SUB_A_A:
+            cpu->F.carry = 0;
+            cpu->A = sm83_sub8(cpu->A, cpu->A, cpu);
+            break;
         case AND_A_B:
             cpu->A = sm83_and8(cpu->A, cpu->B, cpu);
             break;
@@ -613,6 +671,11 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->BC = *(uint16_t*) bus_read(cpu->SP, machine);
             cpu->SP += 2;
             break;
+        case JP_NZ_U16:
+            if (!cpu->F.zero) {
+                cpu->PC = *(uint16_t*) bus_read(cpu->PC, machine);
+            }
+            break;
         case JP_16:
             // Jump to target address
             // PC was incremented before execution, so this accesses the byte(s) directly after the opcode
@@ -637,6 +700,17 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case ADD_A_U8:
             cpu->F.carry = 0;
             cpu->A = sm83_add8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
+            break;
+        case RET_Z:
+            // TODO: Try adding an execute_opcode() function which has this huge
+            // switch statement, so we can do something like:
+            // if (cpu->F.zero) { execute_opcode(RET); }
+            // This might help reduce code repetition, and break down more
+            // complex operations.
+            if (cpu->F.zero) {
+                cpu->PC = *(uint16_t*) bus_read(cpu->SP, machine);
+                cpu->SP += 2;
+            }
             break;
         case RET:
             cpu->PC = *(uint16_t*) bus_read(cpu->SP, machine);
@@ -738,6 +812,13 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case OR_A_U8:
             cpu->A = sm83_or8(cpu->A, *bus_read(cpu->PC++, machine), cpu);
+            break;
+        case LD_HL_SPi8:
+            {
+                // TODO: Does this need to use 8-bit carry math, or 16-bit?
+                int8_t offset = *bus_read(cpu->PC++, machine);
+                cpu->HL = sm83_add16(cpu->SP, offset, cpu);
+            }
             break;
         case LD_A_U16:
             // Scope allows us to declare this variable without compiler warnings
