@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "bus.h"
+#include <bits/stdint-uintn.h>
 
 register8 sm83_add8(register8 x, register8 y, cpu_state* cpu) {
     register8 result = x + y + cpu->F.carry;
@@ -53,16 +54,49 @@ register8 sm83_or8(register8 x, register8 y, cpu_state* cpu) {
     return x | y;
 }
 
-// Rotate the input register, using the carry flag as a 9th bit.
-register8 sm83_rotate_register(register8 reg, cpu_state* cpu) {
+// Rotate the input left, using the carry flag as a 9th bit.
+register8 sm83_rotate_left(register8 reg, cpu_state* cpu) {
+    uint8_t carry = reg & 0b00000001;
+    reg = (reg << 1) | (cpu->F.carry);
+
+    cpu->F.carry = carry;
+    cpu->F.half_carry = 0;
+    cpu->F.subtraction = 0;
+    cpu->F.zero = (reg == 0);
+    return reg;
+}
+
+// Rotate the input left, then copy the last bit to the carry flag.
+register8 sm83_rotate_left_copy(register8 reg, cpu_state* cpu) {
+    reg = (reg << 1) | (reg >> 7);
+
+    cpu->F.carry = reg & 0b00000001;
+    cpu->F.half_carry = 0;
+    cpu->F.subtraction = 0;
+    cpu->F.zero = (reg == 0);
+    return reg;
+}
+
+// Rotate the input right, using the carry flag as a 9th bit.
+register8 sm83_rotate_right(register8 reg, cpu_state* cpu) {
     cpu->F.subtraction = false;
     cpu->F.half_carry = false;
 
-    uint8_t carry = reg | 0b00000001;
+    uint8_t carry = reg & 0b00000001;
     reg = (cpu->F.carry << 7) | (reg >> 1);
     cpu->F.zero = (reg == 0);
     cpu->F.carry = carry;
     return reg;
+}
+
+// Rotate the input right, then copy the last bit to the carry flag.
+register8 sm83_rotate_right_copy(register8 reg, cpu_state* cpu) {
+    reg = (reg << 7) | (reg >> 1);
+
+    cpu->F.subtraction = false;
+    cpu->F.half_carry = false;
+    cpu->F.carry = reg & 0b00000001;
+    cpu->F.zero = (reg == 0);
 }
 
 // Swap the first and last 4 bits of an 8-bit value.
