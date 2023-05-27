@@ -170,6 +170,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case LD_B_U8:
             cpu->B = *bus_read(cpu->PC++, machine);
             break;
+        case RLCA:
+            cpu->A = sm83_rotate_left_copy(cpu->A, cpu);
+            break;
         case LD_U16_SP:
             // Scope allows us to declare this variable without compiler warnings
             {
@@ -177,6 +180,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
                 bus_write_16_bit(address_0x08, cpu->SP, machine);
             }
             cpu->PC += 2;
+            break;
+        case DEC_BC:
+            cpu->BC--;
             break;
         case INC_C:
             cpu->C = sm83_add8(cpu->C, 1, cpu);
@@ -186,6 +192,12 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case LD_C_U8:
             cpu->C = *bus_read(cpu->PC++, machine);
+            break;
+        case STOP:
+            // TODO: This needs to do a lot more interrupt handling and stuff
+            cpu->executing = false;
+            cpu->PC++;
+            return false;
             break;
         case LD_DE_U16:
             cpu->DE = *(uint16_t*) bus_read(cpu->PC, machine);
@@ -211,6 +223,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case LD_A_DE:
             cpu->A = *bus_read(cpu->DE, machine);
+            break;
+        case DEC_DE:
+            cpu->DE--;
             break;
         case INC_E:
             cpu->E = sm83_add8(cpu->E, 1, cpu);
@@ -268,6 +283,9 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case LDI_A_HL:
             cpu->A = *bus_read(cpu->HL++, machine);
             break;
+        case DEC_HL:
+            cpu->HL--;
+            break;
         case INC_L:
             cpu->L = sm83_add8(cpu->L, 1, cpu);
             break;
@@ -312,6 +330,14 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
                 value = sm83_sub8(value, 1, cpu);
                 bus_write_8_bit(address, value, machine);
             }
+            break;
+        case JR_C_i8:
+            if (cpu->F.carry) {
+                cpu->PC += *(int8_t*) bus_read(cpu->PC++, machine);
+            }
+            break;
+        case DEC_SP:
+            cpu->SP--;
             break;
         case INC_A:
             cpu->A = sm83_add8(cpu->A, 1, cpu);
@@ -661,6 +687,27 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
         case OR_A_A:
             cpu->A = sm83_or8(cpu->A, cpu->A, cpu); // NOP, probably optimized out
             break;
+        case CP_A_B:
+            sm83_sub8(cpu->A, cpu->B, cpu);
+            break;
+        case CP_A_C:
+            sm83_sub8(cpu->A, cpu->C, cpu);
+            break;
+        case CP_A_D:
+            sm83_sub8(cpu->A, cpu->D, cpu);
+            break;
+        case CP_A_E:
+            sm83_sub8(cpu->A, cpu->E, cpu);
+            break;
+        case CP_A_H:
+            sm83_sub8(cpu->A, cpu->H, cpu);
+            break;
+        case CP_A_L:
+            sm83_sub8(cpu->A, cpu->L, cpu);
+            break;
+        case CP_A_A:
+            sm83_sub8(cpu->A, cpu->A, cpu);
+            break;
         case RET_NZ:
             if (!cpu->F.zero) {
                 cpu->PC = *(uint16_t*) bus_read(cpu->SP, machine);
@@ -758,6 +805,12 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             {
                 uint8_t value = *bus_read(cpu->PC++, machine);
                 cpu->A = sm83_sub8(cpu->A, value, cpu);
+            }
+            break;
+        case RET_C:
+            if (cpu->F.carry) {
+                cpu->PC = *(uint16_t*) bus_read(cpu->SP, machine);
+                cpu->SP += 2;
             }
             break;
         case LD_FF00U8_A:
@@ -1026,6 +1079,13 @@ bool tick(const machine_state* machine) {
     cpu.remaining_execution_cycles--; // Update every cycle
 
     if (cpu.remaining_execution_cycles == 0) {
+
+        // Serial output for printing??
+        if(*bus_read(0xFF02, machine) == 0x81) {
+            char* c = (char*) bus_read(0xFF01, machine);
+            printf("%c", c);
+            bus_write_8_bit(0xFF02, 0x00, machine);
+        }
         return execute_switch(&cpu, machine);
     }
     // Copy IME byte to interrupt flag
