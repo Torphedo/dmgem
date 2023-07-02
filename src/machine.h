@@ -13,6 +13,10 @@ typedef enum {
     MBC7
 }controller_type;
 
+typedef enum {
+   RAM_BANK_SIZE = 0x2000
+}machine_constants;
+
 typedef struct {
     uint8_t* console_memory; // Machine's 16-bit address space
     uint8_t* cartridge_rom; // Full ROM data loaded from the input file (full cartridge ROM data)

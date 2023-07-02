@@ -7,7 +7,6 @@
 #include <malloc.h>
 #include <memory.h>
 #include <stdio.h>
-#include <sys/stat.h>
 
 #include <logging.h>
 
@@ -19,7 +18,7 @@
 bool run_machine(uint8_t* rom_data, uint32_t rom_size) {
     machine_state machine = {0};
     uint32_t machine_mem_size = 0xFFFF + 1;
-    uint32_t cart_ram_size = 0x2000 * 8; // Enough space for 8 8KiB banks of external RAM
+    uint32_t cart_ram_size = RAM_BANK_SIZE * 8; // Enough space for 8 8KiB banks of external RAM
      
     machine.console_memory = calloc(machine_mem_size + rom_size + cart_ram_size, 1);
     if (machine.console_memory == NULL) {
@@ -36,6 +35,8 @@ bool run_machine(uint8_t* rom_data, uint32_t rom_size) {
     machine.rom_bank_count = 2 * (1 << cart->rom_size);
     machine.ram_bank_count = ram_bank_count(cart);
     print_rom_info(cart);
+
+    machine.external_ram = calloc(1, RAM_BANK_SIZE * machine.ram_bank_count);
 
     // Emulator will only enter main loop if the requested memory controller is implemented
     bool running = init_memory_controller(cart);
