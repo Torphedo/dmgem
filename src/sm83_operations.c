@@ -1,6 +1,5 @@
 #include "cpu.h"
 #include "bus.h"
-#include <bits/stdint-uintn.h>
 
 register8 sm83_add8(register8 x, register8 y, cpu_state* cpu) {
     register8 result = x + y + cpu->F.carry;
@@ -97,6 +96,8 @@ register8 sm83_rotate_right_copy(register8 reg, cpu_state* cpu) {
     cpu->F.half_carry = false;
     cpu->F.carry = reg & 0b00000001;
     cpu->F.zero = (reg == 0);
+
+    return reg;
 }
 
 // Swap the first and last 4 bits of an 8-bit value.
