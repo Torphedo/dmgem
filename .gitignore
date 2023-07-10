@@ -5,6 +5,7 @@ bin/
 .idea/
 .vs/
 cmake_*/
+cmake-*/
 out/
 compile_commands.json
 
