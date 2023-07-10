@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -25,7 +26,6 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
         // value can just be fetched from the table.
         case JP_Z_U16:
         case CALL_Z_U16:
-        case CALL_NC_U16:
         case JP_C_U16:
         case CALL_C_U16:
             log_error(WARNING, "Instruction encountered at $%04x needs special logic to determine its execution time. Defaulting to best-case execution time...\n", cpu->PC);
@@ -33,6 +33,8 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
             if (!cpu->F.carry) { return 4; }
         case JP_NZ_U16:
             if (!cpu->F.zero) { return 4; }
+        case CALL_NC_U16:
+            if (!cpu->F.carry) { return 6; }
         case CALL_NZ_U16:
             if (!cpu->F.zero) { return 6; }
         case JR_Z_i8:
@@ -796,6 +798,18 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->DE = *(uint16_t*) bus_read(cpu->SP, machine);
             cpu->SP += 2;
             break;
+        case CALL_NC_U16:
+            // Scope allows us to declare this variable without compiler warnings
+            {
+                uint16_t func_addr_0xD4 = *(uint16_t*) bus_read(cpu->PC, machine);
+                cpu->PC += 2; // Move PC to next opcode
+                if (!cpu->F.carry) {
+                    cpu->SP -= 2; // Push return address onto the stack
+                    bus_write_16_bit(cpu->SP, cpu->PC, machine);
+                    cpu->PC = func_addr_0xD4; // Jump to target address
+                }
+            }
+            break;
         case PUSH_DE:
             cpu->SP -= 2;
             bus_write_16_bit(cpu->SP, cpu->DE, machine);
@@ -1083,7 +1097,7 @@ bool tick(const machine_state* machine) {
         // Serial output for printing??
         if(*bus_read(0xFF02, machine) == 0x81) {
             char* c = (char*) bus_read(0xFF01, machine);
-            printf("%c", c);
+            printf("%c\n\n", c);
             bus_write_8_bit(0xFF02, 0x00, machine);
         }
         return execute_switch(&cpu, machine);
