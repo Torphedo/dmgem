@@ -1,8 +1,6 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <logging.h>
-
 #include "memory_controllers.h"
 #include "bus.h"
 

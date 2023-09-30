@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <logging.h>
+#include "logging.h"
 
 #include "cpu.h"
 #include "bus.h"
@@ -28,7 +28,7 @@ static uint8_t get_execution_time(const machine_state* machine, const cpu_state*
         case CALL_Z_U16:
         case JP_C_U16:
         case CALL_C_U16:
-            log_error(WARNING, "Instruction encountered at $%04x needs special logic to determine its execution time. Defaulting to best-case execution time...\n", cpu->PC);
+            LOG_MSG(warning, "Instruction encountered at $%04x needs special logic to determine its execution time. Defaulting to best-case execution time...\n", cpu->PC);
         case JP_NC_U16:
             if (!cpu->F.carry) { return 4; }
         case JP_NZ_U16:
@@ -138,9 +138,7 @@ static bool execute_prefix(cpu_state* cpu, const machine_state* machine) {
             cpu->A >>= 1;
             break;
         default:
-            // Enable logging if it's off
-            enable_logging();
-            log_error(CRITICAL, "execute_prefix(): Unknown opcode 0xCB%02x at $%04x\n", opcode, cpu->PC - 1);
+            LOG_MSG(error, "Unknown opcode 0xCB%02x at $%04x\n", opcode, cpu->PC - 1);
             return false;
     }
     // Callee handles incrementing program counter.
@@ -911,12 +909,10 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             }
             break;
         default:
-            // Enable logging if it's off
-            enable_logging();
-            log_error(CRITICAL, "execute_switch(): Illegal or unimplemented instruction 0x%02x at $%04x, exiting.\n", opcode, cpu->PC - 1);
+            LOG_MSG(error, "Illegal or unimplemented instruction 0x%02x at $%04x, exiting.\n", opcode, cpu->PC - 1);
             return false;
     }
-    log_error(DEBUG, "execute_switch(): Executed instruction opcode 0x%02x at $%04x\n",opcode, opcode_pc);
+    LOG_MSG(debug, "Executed instruction opcode 0x%02x at $%04x\n",opcode, opcode_pc);
     return true;
 }
 

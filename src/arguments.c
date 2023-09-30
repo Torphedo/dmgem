@@ -1,7 +1,5 @@
 #include <string.h>
 
-#include <logging.h>
-
 #include "arguments.h"
 
 static const char* arguments[] = {

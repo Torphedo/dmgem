@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "bus.h"
 #include "memory_controllers.h"
 
@@ -21,6 +23,7 @@ uint8_t* bus_read(uint16_t address, const machine_state* machine) {
         // Normal memory read, return address of the target byte
         return &machine->console_memory[address];
     }
+    return NULL; // Oh well.
 }
 
 void bus_write_8_bit(uint16_t address, uint8_t value, const machine_state* machine) {

@@ -1,17 +1,12 @@
 add_executable(dmgem
-	"main.c"
+    "main.c"
     "rom.c"
-	"cpu.c"
-	"bus.c"
-	"machine.c"
-	"arguments.c"
-	"memory_controllers.c"
+    "cpu.c"
+    "bus.c"
+    "machine.c"
+    "arguments.c"
+    "memory_controllers.c"
     "sm83_operations.c"
-	"../external/logging/logging.c"
-)
-
-target_include_directories(dmgem PRIVATE
-		"../external"
-		"../external/logging"
+    "logging.c"
 )
 

@@ -1,3 +1,0 @@
-[submodule "external/logging"]
-	path = external/logging
-	url = https://github.com/Torphedo/logging

@@ -8,8 +8,6 @@
 #include <memory.h>
 #include <stdio.h>
 
-#include <logging.h>
-
 #include "machine.h"
 #include "cpu.h"
 #include "memory_controllers.h"

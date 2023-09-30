@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16) # Latest version on apt, and nothing newer is needed.
 project(dmgem
-	VERSION 0.0.1
-	LANGUAGES C
+    VERSION 0.0.1
+    LANGUAGES C
 )
 
 set(CMAKE_C_STANDARD 99)
