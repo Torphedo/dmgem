@@ -4,7 +4,6 @@ add_executable(dmgem
     "cpu.c"
     "bus.c"
     "machine.c"
-    "arguments.c"
     "memory_controllers.c"
     "sm83_operations.c"
 
