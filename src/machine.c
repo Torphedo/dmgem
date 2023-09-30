@@ -16,9 +16,12 @@
 bool run_machine(uint8_t* rom_data, uint32_t rom_size) {
     machine_state machine = {0};
     uint32_t machine_mem_size = 0xFFFF + 1;
-    uint32_t cart_ram_size = RAM_BANK_SIZE * 8; // Enough space for 8 8KiB banks of external RAM
+
+    // Enough space for 8 8KiB banks of external RAM
+    uint32_t cart_ram_size = RAM_BANK_SIZE * 8;
      
-    machine.console_memory = calloc(machine_mem_size + rom_size + cart_ram_size, 1);
+    uint32_t total_ram_size = machine_mem_size + rom_size + cart_ram_size;
+    machine.console_memory = calloc(total_ram_size, 1);
     if (machine.console_memory == NULL) {
         return false;
     }
@@ -36,7 +39,7 @@ bool run_machine(uint8_t* rom_data, uint32_t rom_size) {
 
     machine.external_ram = calloc(1, RAM_BANK_SIZE * machine.ram_bank_count);
 
-    // Emulator will only enter main loop if the requested memory controller is implemented
+    // Only enter main loop if the requested memory controller is implemented
     bool running = init_memory_controller(cart);
 
     while (running) {
@@ -44,8 +47,8 @@ bool run_machine(uint8_t* rom_data, uint32_t rom_size) {
         running = tick(&machine);
     }
     free(machine.console_memory);
-    // Inverted because exit code 0 is success but set to true in stdbool.
-    // This will return 0 if the loop is broken and 1 if a component returns false.
+    // Inverted to turn bool into standard process exit code.
+    // 0 (false) is success, 1 (true) is an error.
     return !running;
 
 }

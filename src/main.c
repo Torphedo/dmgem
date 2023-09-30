@@ -7,7 +7,6 @@
 
 #include "rom.h"
 #include "machine.h"
-#include "arguments.h"
 
 void print_instructions() {
     LOG_MSG(info, "Usage: dmgem [ROM filepath]\n");
