@@ -7,6 +7,8 @@ add_executable(dmgem
     "arguments.c"
     "memory_controllers.c"
     "sm83_operations.c"
+
     "logging.c"
+    "file.c"
 )
 
