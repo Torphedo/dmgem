@@ -6,9 +6,12 @@
 #include "rom.h"
 
 static const char nintendo_logo[] = {
-        0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
-        0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E, 0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
-        0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
+    0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B,
+    0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
+    0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E,
+    0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
+    0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC,
+    0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
 };
 
 uint8_t ram_bank_count(cart_header* cart) {
@@ -129,14 +132,15 @@ void print_rom_info(cart_header* rom_header) {
     if (memcmp(&nintendo_logo, rom_header->nintendo_logo, sizeof(nintendo_logo)) != 0) {
         LOG_MSG(warning, "Failed Nintendo logo check, proceeding anyway\n");
     }
-    // In older games, 16 bytes were used for the ROM name. In newer games, only 11 bytes are available (adding 1 to account for null terminator)
+    // In older games, 16 bytes were used for the ROM name. In newer games,
+    // only 11 bytes are available (adding 1 to account for null terminator)
     if (strlen(rom_header->name_old_format) + 1 > 11) {
         LOG_MSG(info, "ROM Name: %s\n", rom_header->name_old_format);
     }
     else {
         LOG_MSG(info, "ROM Name: %s\n", rom_header->name_new_format);
+
         LOG_MSG(info, "Publisher Code: %c%c%c%c\n", rom_header->manufacturer_code[0], rom_header->manufacturer_code[1], rom_header->manufacturer_code[2], rom_header->manufacturer_code[3]);
-        // TODO: Detect PGB Mode (https://gbdev.io/pandocs/The_Cartridge_Header.html#0143--cgb-flag)
         if (rom_header->color_support == 0x80 || rom_header->color_support == 0xC0) {
             LOG_MSG(info, "This game supports color enhancements, but is compatible with an original Game Boy.\n");
         }

@@ -10,7 +10,8 @@ typedef struct {
         struct
         {
             char name_new_format[11];
-            uint8_t manufacturer_code[4]; // This can't be a uint32_t or it will add padding and mess up the size
+            // Making this a u32 will add padding and mess up the size
+            uint8_t manufacturer_code[4];
             uint8_t color_support;
         };
     };
@@ -20,7 +21,7 @@ typedef struct {
     uint8_t rom_size;
     uint8_t ram_size;
     uint8_t region;
-    uint8_t old_licensee_code; // 0x33 means the new code should be used instead
+    uint8_t old_licensee_code; // 0x33 means new code should be used instead
     uint8_t game_version;
     uint8_t header_checksum;
     uint16_t global_checksum;

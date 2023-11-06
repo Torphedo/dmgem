@@ -174,7 +174,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->A = sm83_rotate_left_copy(cpu->A, cpu);
             break;
         case LD_U16_SP:
-            // Scope allows us to declare this variable without compiler warnings
+            // Scope lets us declare this variable without compiler warnings
             {
                 uint16_t address_0x08 = *(uint16_t*) bus_read(cpu->PC, machine);
                 bus_write_16_bit(address_0x08, cpu->SP, machine);
@@ -240,7 +240,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->A = sm83_rotate_right(cpu->A, cpu);
             break;
         case JR_NZ_i8:
-            // Scope allows us to declare this variable without compiler warnings
+            // Scope lets us declare this variable without compiler warnings
             {
                 int8_t offset_0x20 = *(int8_t*) bus_read(cpu->PC++, machine);
                 if (!cpu->F.zero) {
@@ -269,7 +269,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->H = *bus_read(cpu->PC++, machine);
             break;
         case JR_Z_i8:
-            // Scope allows us to declare this variable without compiler warnings
+            // Scope lets us declare this variable without compiler warnings
             {
                 int8_t offset_0x28 = *(int8_t*) bus_read(cpu->PC++, machine);
                 if (cpu->F.zero) {
@@ -293,7 +293,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->L = sm83_sub8(cpu->L, 1, cpu);
             break;
         case JR_NC_i8:
-            // Scope allows us to declare this variable without compiler warnings
+            // Scope lets us declare this variable without compiler warnings
             {
                 int8_t offset_0x30 = *(int8_t*) bus_read(cpu->PC++, machine);
                 if (!cpu->F.carry) {
@@ -312,7 +312,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             cpu->SP++;
             break;
         case INC_HL_8:
-            // Scope allows us to declare this variable without compiler warnings
+            // Scope lets us declare this variable without compiler warnings
             {
                 uint16_t address = *(uint16_t*)bus_read(cpu->PC, machine);
                 cpu->PC += 2;
@@ -322,7 +322,7 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             }
             break;
         case DEC_HL_8:
-            // Scope allows us to declare this variable without compiler warnings
+            // Scope lets us declare this variable without compiler warnings
             {
                 uint16_t address = *(uint16_t*)bus_read(cpu->PC, machine);
                 cpu->PC += 2;
@@ -725,7 +725,8 @@ static bool execute_switch(cpu_state* cpu, const machine_state* machine) {
             break;
         case JP_16:
             // Jump to target address
-            // PC was incremented before execution, so this accesses the byte(s) directly after the opcode
+            // PC was incremented before execution, so this accesses the
+            // byte(s) directly after the opcode
             cpu->PC = *(uint16_t*) bus_read(cpu->PC, machine);
             break;
         case CALL_NZ_U16:
