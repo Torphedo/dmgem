@@ -961,118 +961,118 @@ static bool execute_decode(cpu_state* cpu, const machine_state* machine) {
     };
 
     switch (x) {
-        case 0:
-            switch (z) {
-                case 0:
-                    // NOP (0x00)
-                    if (y == 0) {
-                        return true;
+    case 0:
+        switch (z) {
+            case 0:
+                // NOP (0x00)
+                if (y == 0) {
+                    return true;
+                }
+                // LD (nn), SP (0x08)
+                else if (y == 1) {
+                    uint16_t address = *(uint16_t*) bus_read(cpu->PC, machine);
+                    cpu->PC += 2;
+                    bus_write_16_bit(address, cpu->SP, machine);
+                }
+                // STOP (0x10)
+                else if (y == 2) {
+                    cpu->PC++;
+                }
+                // JR i8 (0x18) and JR cc[y-4], d (0x20, 0x28, 0x30, 0x38)
+                else if ((y == 3) || (cc[y - 4])) {
+                    cpu->PC += *(int8_t*) bus_read(cpu->PC, machine);
+                }
+                break;
+            case 1:
+                // LD register_pairs[p], nn (0x01, 0x11, 0x21, 0x31)
+                if (q == 0) {
+                    uint16_t value = *(uint16_t*) bus_read(cpu->PC, machine);
+                    cpu->PC += 2;
+                    *register_pairs[p] = value;
+                }
+                // ADD HL, register_pairs[p]
+                else {
+                    // q is 1 bit, so this is equivalent to else if (q == 1)
+                    cpu->HL = sm83_add16(cpu->HL, *register_pairs[p], cpu);
+                }
+                break;
+            case 2:
+                if (q == 0) {
+                    // LD (BC), A & LD (DE), A (0x02, 0x12)
+                    if (p == 0 || p == 1) {
+                        bus_write_8_bit(*register_pairs[p], cpu->A, machine);
                     }
-                    // LD (nn), SP (0x08)
-                    else if (y == 1) {
-                        uint16_t address = *(uint16_t*) bus_read(cpu->PC, machine);
-                        cpu->PC += 2;
-                        bus_write_16_bit(address, cpu->SP, machine);
+                    // LD (HL+), A (0x22)
+                    else if (p == 2) {
+                        bus_write_8_bit(cpu->HL++, cpu->A, machine);
                     }
-                    // STOP (0x10)
-                    else if (y == 2) {
-                        cpu->PC++;
+                    // LD (HL-), A (0x32)
+                    else if (p == 3) {
+                        bus_write_8_bit(cpu->HL--, cpu->A, machine);
                     }
-                    // JR i8 (0x18) and JR cc[y-4], d (0x20, 0x28, 0x30, 0x38)
-                    else if ((y == 3) || (cc[y - 4])) {
-                        cpu->PC += *(int8_t*) bus_read(cpu->PC, machine);
+                }
+                else
+                {
+                    // LD A, (BC) & LD A, (DE) (0x0A, 0x1A)
+                    if (p == 0 || p == 1) {
+                        cpu->A = *bus_read(*register_pairs[p], machine);
                     }
-                    break;
-                case 1:
-                    // LD register_pairs[p], nn (0x01, 0x11, 0x21, 0x31)
-                    if (q == 0) {
-                        uint16_t value = *(uint16_t*) bus_read(cpu->PC, machine);
-                        cpu->PC += 2;
-                        *register_pairs[p] = value;
+                        // LD A, (HL+) (0x2A)
+                    else if (p == 2) {
+                        cpu->A = *bus_read(cpu->HL++, machine);
                     }
-                    // ADD HL, register_pairs[p]
-                    else {
-                        // q is 1 bit, so this is equivalent to else if (q == 1)
-                        cpu->HL = sm83_add16(cpu->HL, *register_pairs[p], cpu);
+                        // LD A, (HL-) (0x3A)
+                    else if (p == 3) {
+                        cpu->A = *bus_read(cpu->HL--, machine);
                     }
-                    break;
-                case 2:
-                    if (q == 0) {
-                        // LD (BC), A & LD (DE), A (0x02, 0x12)
-                        if (p == 0 || p == 1) {
-                            bus_write_8_bit(*register_pairs[p], cpu->A, machine);
-                        }
-                        // LD (HL+), A (0x22)
-                        else if (p == 2) {
-                            bus_write_8_bit(cpu->HL++, cpu->A, machine);
-                        }
-                        // LD (HL-), A (0x32)
-                        else if (p == 3) {
-                            bus_write_8_bit(cpu->HL--, cpu->A, machine);
-                        }
-                    }
-                    else
-                    {
-                        // LD A, (BC) & LD A, (DE) (0x0A, 0x1A)
-                        if (p == 0 || p == 1) {
-                            cpu->A = *bus_read(*register_pairs[p], machine);
-                        }
-                            // LD A, (HL+) (0x2A)
-                        else if (p == 2) {
-                            cpu->A = *bus_read(cpu->HL++, machine);
-                        }
-                            // LD A, (HL-) (0x3A)
-                        else if (p == 3) {
-                            cpu->A = *bus_read(cpu->HL--, machine);
-                        }
-                    }
-                    break;
-                case 3:
-                    // INC rp[p] (0x03, 0x13, 0x23, 0x33)
-                    if (q == 0) {
-                        *register_pairs[p] += 1;
-                    }
-                    // DEC rp[p] (0x0B, 0x1B, 0x2B, 0x3B)
-                    else {
-                        *register_pairs[p] -= 1;
-                    }
-                    break;
-                case 4:
-                    // INC (HL) 0x34)
-                    if (y == 6) {
-                        uint8_t value = *bus_read(cpu->HL, machine);
-                        value = sm83_add8(value, 1, cpu);
-                        bus_write_8_bit(cpu->HL, value, machine);
-                    }
-                    // INC r[y] (0x04, 0x0C, 0x14, 0x1C, 0x24, 0x2C, 0x3C)
-                    else {
-                        *registers[y] = sm83_add8(*registers[y], 1, cpu);
-                    }
-                    break;
-                case 5:
-                    // DEC (HL) (0x35)
-                    if (y == 6) {
-                        uint8_t value = *bus_read(cpu->HL, machine);
-                        value = sm83_sub8(value, 1, cpu);
-                        bus_write_8_bit(cpu->HL, value, machine);
-                    }
-                    // DEC r[y] (0x05, 0x0D, 0x15, 0x1D, 0x25, 0x2D, 0x3D)
-                    else {
-                        *registers[y] = sm83_sub8(*registers[y], 1, cpu);
-                    }
-                    break;
-                case 6:
-                    // LD (HL), n (0x36)
-                    if (y == 6) {
-                        bus_write_8_bit(cpu->HL, *bus_read(cpu->PC++, machine), machine);
-                    }
-                    // LD r[y], n (0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E, 0x3E)
-                    else {
-                        *registers[y] = *bus_read(cpu->PC++, machine);
-                    }
-                    break;
-            }
-            break;
+                }
+                break;
+            case 3:
+                // INC rp[p] (0x03, 0x13, 0x23, 0x33)
+                if (q == 0) {
+                    *register_pairs[p] += 1;
+                }
+                // DEC rp[p] (0x0B, 0x1B, 0x2B, 0x3B)
+                else {
+                    *register_pairs[p] -= 1;
+                }
+                break;
+            case 4:
+                // INC (HL) 0x34)
+                if (y == 6) {
+                    uint8_t value = *bus_read(cpu->HL, machine);
+                    value = sm83_add8(value, 1, cpu);
+                    bus_write_8_bit(cpu->HL, value, machine);
+                }
+                // INC r[y] (0x04, 0x0C, 0x14, 0x1C, 0x24, 0x2C, 0x3C)
+                else {
+                    *registers[y] = sm83_add8(*registers[y], 1, cpu);
+                }
+                break;
+            case 5:
+                // DEC (HL) (0x35)
+                if (y == 6) {
+                    uint8_t value = *bus_read(cpu->HL, machine);
+                    value = sm83_sub8(value, 1, cpu);
+                    bus_write_8_bit(cpu->HL, value, machine);
+                }
+                // DEC r[y] (0x05, 0x0D, 0x15, 0x1D, 0x25, 0x2D, 0x3D)
+                else {
+                    *registers[y] = sm83_sub8(*registers[y], 1, cpu);
+                }
+                break;
+            case 6:
+                // LD (HL), n (0x36)
+                if (y == 6) {
+                    bus_write_8_bit(cpu->HL, *bus_read(cpu->PC++, machine), machine);
+                }
+                // LD r[y], n (0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E, 0x3E)
+                else {
+                    *registers[y] = *bus_read(cpu->PC++, machine);
+                }
+                break;
+        }
+        break;
     }
     return true;
 }
